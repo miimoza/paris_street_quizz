@@ -1,4 +1,6 @@
 #!/bin/sh
+current_ws=$(i3-msg -t get_workspaces | jq ".[] | select(.focused!=false) | .name")
+echo "current ws : $current_ws"
 
 unique_arr=0
 
@@ -17,76 +19,92 @@ fi
 path="data/voie.geojson"
 set=$(jq ".features[].properties | select(.length>$min_length)" $path)
 lenght=$(echo $set | jq .length | wc -l)
-echo "set_length:$lenght"
 
+echo "Welcome to Paris Quizz Arr (min length: ${min_length}m ->$lenght streets)"
 
-success=0
+echo ""
+echo "Hit enter to play ..."
+read
 
-i=1
-while [ $i -le 10 ]; do
-    lenght=$(echo $set | jq .length | wc -l)
-    #echo $lenght
+while [ 1 ]; do
+    clear
 
-    r=$(( $RANDOM % $lenght ))
-    #echo "random : $r"
+    success=0
 
-    rue=$(echo $set | jq .l_longmin | tail -n $r | head -n 1)
+    i=1
+    while [ $i -le 10 ]; do
+        lenght=$(echo $set | jq .length | wc -l)
+        #echo $lenght
 
-    rue_length=$(echo $set | jq .length | tail -n $r | head -n 1)
+        r=$(( $RANDOM % $lenght ))
+        #echo "random : $r"
 
-    lat=$(echo $set | jq .geom_x_y[0] | tail -n $r | head -n 1)
-    lon=$(echo $set | jq .geom_x_y[1] | tail -n $r | head -n 1)
-    #echo "lat:$lat lon:$lon"
-    coord_info=$(./coord_info.sh $lat $lon)
-    rue_info=$(echo $coord_info | jq .street)
-    postcode=$(echo $coord_info | jq .postcode)
+        rue=$(echo $set | jq .l_longmin | tail -n $r | head -n 1)
 
-    # check null or not in paris
-    if ! [[ $postcode = \"75* ]]; then
-      continue
-    fi
+        rue_length=$(echo $set | jq .length | tail -n $r | head -n 1)
 
+        lat=$(echo $set | jq .geom_x_y[0] | tail -n $r | head -n 1)
+        lon=$(echo $set | jq .geom_x_y[1] | tail -n $r | head -n 1)
+        #echo "lat:$lat lon:$lon"
+        coord_info=$(./coord_info.sh $lat $lon)
+        rue_info=$(echo $coord_info | jq .street)
+        postcode=$(echo $coord_info | jq .postcode)
 
-
-    # CHECK UNIQUE ARR PARAMETER
-    if [ $unique_arr -gt 0 ]; then
-        postcode_unique="\"750$unique_arr\""
-        if [ $postcode != $postcode_unique ]; then
+        # check null or not in paris
+        if ! [[ $postcode = \"75* ]]; then
           continue
         fi
-    fi
+
+
+
+        # CHECK UNIQUE ARR PARAMETER
+        if [ $unique_arr -gt 0 ]; then
+            postcode_unique="\"750$unique_arr\""
+            if [ $postcode != $postcode_unique ]; then
+              continue
+            fi
+        fi
 
 
 
 
 
-    # INPUT
-    echo "=================($i)==================="
+        # INPUT
+        #echo "=================($i)==================="
 
-    printf "$rue | arrondissement: "
 
-    read arr
+        rue_length_average=$(echo $rue_length | cut -d'.' -f 1)
+        printf "[$i] $rue | arrondissement (${rue_length_average}m): "
 
-    if [[ $arr -lt 10 ]]; then
-        arr="0$arr"
-    fi
+        read arr
 
-    postcode_res="\"750$arr\""
+        if [[ $arr -lt 10 ]]; then
+            arr="0$arr"
+        fi
 
-    if [ $postcode_res == $postcode ]; then
-      printf "******* REUSSI *********"
-      success=$((success + 1))
-    else
-      printf "XXXXXXXXXX ECHEC XXXXXXXXX $postcode_res != $postcode .."
-      firefox "https://www.google.com/maps/@$lat,$lon,300m/data=!3m1!1e3?authuser=1"
-      #break
-    fi
+        postcode_res="\"750$arr\""
 
-    echo "(rue: $rue_info | postcode: $postcode | rue_length: $rue_length)"
+        if [ $postcode_res == $postcode ]; then
+          #echo "******* REUSSI *********"
+          success=$((success + 1))
+        else
+          #printf "XXXXXXXXXX ECHEC XXXXXXXXX $postcode_res != $postcode .."
+          echo "ECHEC --> $postcode"
+          firefox "https://www.google.com/maps/@$lat,$lon,300m/data=!3m1!1e3?authuser=1"
+          i3-msg workspace $current_ws
+          #break
+        fi
 
-    ((i++))
+        #echo "(rue: $rue_info | postcode: $postcode | rue_length: $rue_length)"
+
+        ((i++))
+    done
+
+    #echo "*****************************"
+    echo "SCORE: $success/10"
+    #echo "*****************************"
+
+    echo ""
+    echo "Hit enter for a new Game..."
+    read
 done
-
-echo "*****************************"
-echo "score: $success"
-echo "*****************************"
