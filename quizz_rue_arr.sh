@@ -91,7 +91,7 @@ while [ 1 ]; do
           #printf "XXXXXXXXXX ECHEC XXXXXXXXX $postcode_res != $postcode .."
           echo "ECHEC --> $postcode"
           firefox "https://www.google.com/maps/@$lat,$lon,300m/data=!3m1!1e3?authuser=1"
-          i3-msg workspace $current_ws
+          i3-msg workspace $current_ws > /dev/null
           #break
         fi
 
