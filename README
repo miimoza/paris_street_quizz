@@ -1,0 +1,14 @@
+PARIS STREET QUIZZ
+
+
+
+Gamemode List:
+   1 : Guess the district
+   2 : Guess the district with google maps correction
+   3 : Guess the district with google maps correction (One Window Mode)
+   4 : Which street it is ?
+   5 : Which street it is ? (One Window Mode)
+   6 : Which street it is, this one or this one ?
+   7 : Which street it is, this one or this one ? (One Window Mode)
+
+ usage: ./psq.sh <gamemode> <minimum street length> <specific district>
