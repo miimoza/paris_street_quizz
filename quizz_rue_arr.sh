@@ -1,6 +1,5 @@
 #!/bin/sh
 current_ws=$(i3-msg -t get_workspaces | jq ".[] | select(.focused!=false) | .name")
-echo "current ws : $current_ws"
 
 unique_arr=0
 
